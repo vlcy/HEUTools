@@ -1,5 +1,6 @@
 #-*- encoding:utf8 -*-
 
+import re
 import requests
 from PIL import Image
 from bs4 import BeautifulSoup
@@ -12,6 +13,8 @@ class HeuSpider():
             'proxy_login':'https://ssl.hrbeu.edu.cn/por/login_psw.csp',
             'office_login':'https://ssl.hrbeu.edu.cn/web/1/http/2/jw.hrbeu.edu.cn/ACTIONLOGON.APPPROCESS?mode=4',
             'office_agnomen':'https://ssl.hrbeu.edu.cn/web/1/http/0/jw.hrbeu.edu.cn/web/0/http/2/jw.hrbeu.edu.cn/ACTIONVALIDATERANDOMPICTURE.APPPROCESS',
+            'result_inquiry':'https://ssl.hrbeu.edu.cn/web/1/http/0/jw.hrbeu.edu.cn/ACTIONQUERYSTUDENTSCORE.APPPROCESS',
+
         }
         #这里定义请求头
         self.headers = {
@@ -65,10 +68,27 @@ class HeuSpider():
                      verify=False)
         return Session
 
-    def Crawl(self):
-        self.office_login(self.proxy_login())
+    def infoCrawl(self):
+        return self.office_login(self.proxy_login())
+
+    def result_inquiry(self):
+        session = self.infoCrawl()
+        resp = session.get(self.urls['result_inquiry'])
+        soup = BeautifulSoup(resp.content.decode('gb2312').encode('utf8'), 'html.parser')
+        soup.prettify() #格式化
+        results = soup.find_all('tr', {'class':'color-row'})
+        print '共查询到%d门成绩，' % len(results)
+        pattern = re.compile(r">(.*?)</td>")
+        for result in results:
+            details = re.findall(pattern, str(result))
+            print '%-20s ' % details[0].decode('utf8') + \
+                  '%-10s' % details[1].decode('utf8')
+
+
+
+
 
 if __name__ == "__main__":
     mySpider = HeuSpider()
-    mySpider.Crawl()
+    mySpider.result_inquiry()
 
