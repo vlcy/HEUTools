@@ -4,7 +4,7 @@ import re
 import requests
 from PIL import Image
 from bs4 import BeautifulSoup
-
+from chardet import detect
 
 class HeuSpider():
     def __init__(self):
@@ -78,12 +78,9 @@ class HeuSpider():
         soup.prettify() #格式化
         results = soup.find_all('tr', {'class':'color-row'})
         print '共查询到%d门成绩，' % len(results)
-        pattern = re.compile(r">(.*?)</td>")
-        for result in results:
-            details = re.findall(pattern, str(result))
-            print '%-20s ' % details[0].decode('utf8') + \
-                  '%-10s' % details[1].decode('utf8')
-
+        table = soup.find('table', {'class':'tableborder','border':'1'})
+        with open('result.html', 'wb') as file:
+            file.write(bytes(table).encode('ascii', 'ignore').decode('ascii'))
 
 
 
